@@ -3,10 +3,10 @@
 /// <summary>
 /// Utility for showing a popup window over the main content.
 /// </summary>
-public class Popup : RootConsoleContainer {
+public class CUIPopup : CUIRootContainer {
 	private Action close;
 
-	private Popup(ConsoleComponent content, Action close) : base(content) {
+	private CUIPopup(CUIComponent content, Action close) : base(content) {
 		this.close = close;
 		Opaque = false;
 	}
@@ -22,18 +22,18 @@ public class Popup : RootConsoleContainer {
 	/// </summary>
 	/// <param name="content">the content of the popup</param>
 	/// <returns>true if the user pressed confirm, false if he pressed Esc</returns>
-	public static bool Show(ConsoleComponent content) {
+	public static bool Show(CUIComponent content) {
 		bool open = true;
 		bool result = false;
-		ConsoleContainer popupContainer = new ConsoleContainer("", "[grow, center]", "[grow, center]");
+		CUIContainer popupContainer = new CUIContainer("", "[grow, center]", "[grow, center]");
 		popupContainer.Opaque = false;
-		Popup popup = new Popup(popupContainer, () => open = false);
+		CUIPopup cuiPopup = new CUIPopup(popupContainer, () => open = false);
 
-		ConsoleContainer contentContainer = new ConsoleContainer("wrap 1", "[grow, fill]", "[grow, fill][]");
+		CUIContainer contentContainer = new CUIContainer("wrap 1", "[grow, fill]", "[grow, fill][]");
 		contentContainer.SetBorder(1, 1, 1, 1);
 		contentContainer.SetPadding(0, 0, 1, 1);
 		contentContainer.Add(content);
-		LabelButton confirmButton = new LabelButton("(C)onfirm", () => {
+		CUILabelButton confirmButton = new CUILabelButton("(C)onfirm", () => {
 			open = false;
 			result = true;
 		});
@@ -42,26 +42,27 @@ public class Popup : RootConsoleContainer {
 		contentContainer.Add(confirmButton);
 		popupContainer.Add(contentContainer);
 
-		ConsoleRenderManager.Instance.AddContainer(popup);
+		CUIRenderManager.Instance.AddContainer(cuiPopup);
 		while (open) {
 			Thread.Sleep(10);
 		}
 
-		ConsoleRenderManager.Instance.RemoveContainer(popup);
+		CUIRenderManager.Instance.RemoveContainer(cuiPopup);
 
 		return result;
 	}
 
 	public static string? ShowInput(string label) {
-		ConsoleContainer container = new ConsoleContainer("", "[grow, fill]", "[][grow, fill]");
+		CUIContainer container = new CUIContainer("", "[grow, fill]", "[][grow, fill]");
 		container.SetBorder(1, 1, 1, 1);
 		container.SetPadding(0, 0, 1, 1);
-		container.Add(new ConsoleLabel(label));
-		ConsoleInputField inputField = new ConsoleInputField();
+		container.Add(new CUILabel(label));
+		CUIInputField inputField = new CUIInputField();
 		container.Add(inputField);
 		if (Show(container)) {
 			return inputField.Content;
-		} else {
+		}
+		else {
 			return null;
 		}
 	}

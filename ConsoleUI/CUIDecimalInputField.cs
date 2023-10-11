@@ -5,10 +5,10 @@ namespace ConsoleUI;
 /// <summary>
 /// An input field that only allows decimals.
 /// </summary>
-public class DecimalInputField : ConsoleInputField
+public class CUIDecimalInputField : CUIInputField
 {
     
-    public DecimalInputField(decimal value) : base(value + "")
+    public CUIDecimalInputField(decimal value) : base(value + "")
     {
         InputFilter = (c) =>
         {

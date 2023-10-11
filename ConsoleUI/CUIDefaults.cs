@@ -2,7 +2,7 @@
 
 namespace ConsoleUI;
 
-public static class UIDefaults
+public static class CUIDefaults
 {
     public static bool Debug = true;
     

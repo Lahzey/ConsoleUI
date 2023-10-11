@@ -2,13 +2,13 @@
 
 namespace ConsoleUI;
 
-public abstract class ConsoleComponent
+public abstract class CUIComponent
 {
-    private static readonly char HorizontalLine = '-';
-    private static readonly char VerticalLine = '|';
+    private static readonly char HorizontalLine = '─';
+    private static readonly char VerticalLine = '│';
     private static readonly char Corner = '+';
     
-    public ConsoleContainer Parent { get; protected internal set; }
+    public CUIContainer Parent { get; protected internal set; }
 
     #region margins
     public int MarginTop { get => marginTop; set { marginTop = value; Rerender(); } }
@@ -58,17 +58,17 @@ public abstract class ConsoleComponent
     
     #region colors
     public Color ForegroundColor { get => foregroundColor; set { foregroundColor = value; Rerender(); } }
-    private Color foregroundColor = UIDefaults.ForegroundColor;
+    private Color foregroundColor = CUIDefaults.ForegroundColor;
     public Color BackgroundColor { get => backgroundColor; set { backgroundColor = value; Rerender(); } }
-    private Color backgroundColor = UIDefaults.BackgroundColor;
+    private Color backgroundColor = CUIDefaults.BackgroundColor;
     public Color BorderColor { get => borderColor; set { borderColor = value; Rerender(); } }
-    private Color borderColor = UIDefaults.BorderColor;
+    private Color borderColor = CUIDefaults.BorderColor;
     public Color FocusedForegroundColor { get => focusedForegroundColor; set { focusedForegroundColor = value; Rerender(); } }
-    private Color focusedForegroundColor = UIDefaults.FocusedForegroundColor;
+    private Color focusedForegroundColor = CUIDefaults.FocusedForegroundColor;
     public Color FocusedBackgroundColor { get => focusedBackgroundColor; set { focusedBackgroundColor = value; Rerender(); } }
-    private Color focusedBackgroundColor = UIDefaults.FocusedBackgroundColor;
+    private Color focusedBackgroundColor = CUIDefaults.FocusedBackgroundColor;
     public Color FocusedBorderColor { get => focusedBorderColor; set { focusedBorderColor = value; Rerender(); } }
-    private Color focusedBorderColor = UIDefaults.FocusedBorderColor;
+    private Color focusedBorderColor = CUIDefaults.FocusedBorderColor;
     #endregion colors
 
     public bool Opaque { get => opaque; set { opaque = value; Rerender(); } }
@@ -93,24 +93,24 @@ public abstract class ConsoleComponent
 
     public bool IsFocused()
     {
-        RootConsoleContainer root = ConsoleUIUtils.GetRoot(this);
-        return root != null ? root.getFocused() == this : false;
+        CUIRootContainer cuiRoot = CUIUtils.GetRoot(this);
+        return cuiRoot != null ? cuiRoot.getFocused() == this : false;
     }
     
     public void Focus()
     {
-        RootConsoleContainer root = ConsoleUIUtils.GetRoot(this);
-        if (root != null) root.Focus(this);
+        CUIRootContainer cuiRoot = CUIUtils.GetRoot(this);
+        if (cuiRoot != null) cuiRoot.Focus(this);
     }
 
     /// <summary>
     /// Searches for the next component in the component tree, relevant for focusing.
     /// </summary>
     /// <returns>The next component in the component tree, containers come before their children.</returns>
-    protected virtual ConsoleComponent GetNext()
+    protected virtual CUIComponent GetNext()
     {
-        ConsoleContainer parent = Parent;
-        ConsoleComponent component = this;
+        CUIContainer parent = Parent;
+        CUIComponent component = this;
         while (parent != null)
         {
             int index = parent.IndexOf(component);
@@ -187,7 +187,7 @@ public abstract class ConsoleComponent
         buffer = new RenderBuffer(buffer, MarginLeft, MarginTop, buffer.GetWidth() - MarginLeft - MarginRight, buffer.GetHeight() - MarginTop - MarginBottom);
         
         buffer.ForegroundColor = focused ? FocusedBorderColor : BorderColor;
-        buffer = ConsoleUIUtils.Pad(buffer, BorderTop, BorderBottom, BorderLeft, BorderRight, BorderTopChar, BorderBottomChar, BorderLeftChar, BorderRightChar, BorderCornerChar);
+        buffer = CUIUtils.Pad(buffer, BorderTop, BorderBottom, BorderLeft, BorderRight, BorderTopChar, BorderBottomChar, BorderLeftChar, BorderRightChar, BorderCornerChar);
         
         buffer.BackgroundColor = focused ? FocusedBackgroundColor : BackgroundColor;
         if (Opaque)
@@ -219,6 +219,6 @@ public abstract class ConsoleComponent
     /// </summary>
     public void Rerender()
     {
-        ConsoleRenderManager.Instance.Rerender();
+        CUIRenderManager.Instance.Rerender();
     }
 }

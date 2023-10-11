@@ -4,29 +4,29 @@ namespace ConsoleUI;
 
 /// <summary>
 /// A component that can contain other components.
-/// Any component wanting to display child components should inherit from this class in order to be accounted in the component tree.
+/// Any component wanting to display child components should inherit from this class in order for them to be accounted for in the component tree.
 /// </summary>
-public class ConsoleContainer : ConsoleComponent
+public class CUIContainer : CUIComponent
 {
     private readonly ContainerConstraints containerConstraints;
     private readonly ColumnConstraints columnConstraints;
     private readonly RowConstraints rowConstraints;
 
-    private readonly List<List<ConsoleComponent>> componentRows = new List<List<ConsoleComponent>>();
+    private readonly List<List<CUIComponent>> componentRows = new List<List<CUIComponent>>();
 
-    private readonly Dictionary<ConsoleComponent, ComponentConstraints> componentFormatting = new Dictionary<ConsoleComponent, ComponentConstraints>();
+    private readonly Dictionary<CUIComponent, ComponentConstraints> componentFormatting = new Dictionary<CUIComponent, ComponentConstraints>();
 
-    public ConsoleContainer() : this("", "", "")
+    public CUIContainer() : this("", "", "")
     {
     }
 
-    public ConsoleContainer(string containerConstraints, string columnConstraints, string rowConstraints)
+    public CUIContainer(string containerConstraints, string columnConstraints, string rowConstraints)
     {
         this.containerConstraints = ContainerConstraints.parse(containerConstraints);
         this.columnConstraints = ColumnConstraints.parse(columnConstraints);
         this.rowConstraints = RowConstraints.parse(rowConstraints);
 
-        componentRows.Add(new List<ConsoleComponent>());
+        componentRows.Add(new List<CUIComponent>());
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ public class ConsoleContainer : ConsoleComponent
     /// </summary>
     /// <param name="component">the component to add</param>
     /// <param name="formatting">the formatting for this specific component, potentially overwriting default formatting from the column and row constraints.</param>
-    public void Add(ConsoleComponent component, string formatting = "")
+    public void Add(CUIComponent component, string formatting = "")
     {
         int defaultXOrientation = columnConstraints.getDefaultComponentOrientation(componentRows.Last().Count);
         int defaultYOrientation = rowConstraints.getDefaultComponentOrientation(componentRows.Count - 1);
@@ -53,7 +53,7 @@ public class ConsoleContainer : ConsoleComponent
     /// </summary>
     public void Wrap()
     {
-        componentRows.Add(new List<ConsoleComponent>());
+        componentRows.Add(new List<CUIComponent>());
         Rerender();
     }
 
@@ -63,13 +63,13 @@ public class ConsoleContainer : ConsoleComponent
     /// </summary>
     /// <param name="component">the component to remove</param>
     /// <returns>true if the component was contained in this container, false otherwise</returns>
-    public bool Remove(ConsoleComponent component)
+    public bool Remove(CUIComponent component)
     {
         // search componentRows for component
         componentFormatting.Remove(component);
         for (int i = 0; i < componentRows.Count; i++)
         {
-            List<ConsoleComponent> row = componentRows[i];
+            List<CUIComponent> row = componentRows[i];
             if (row.Remove(component)) // returns true if it contained the component, which means it has been found
             {
                 // remove row if now empty
@@ -81,8 +81,8 @@ public class ConsoleContainer : ConsoleComponent
                 // unfocus component if focused
                 if (component.IsFocused())
                 {
-                    RootConsoleContainer root = ConsoleUIUtils.GetRoot(this);
-                    if (root != null) root.FocusNext();
+                    CUIRootContainer cuiRoot = CUIUtils.GetRoot(this);
+                    if (cuiRoot != null) cuiRoot.FocusNext();
                 }
                 
                 component.Parent = null;
@@ -101,24 +101,24 @@ public class ConsoleContainer : ConsoleComponent
     public void RemoveAll()
     {
         // get all components in this container
-        List<ConsoleComponent> components = new List<ConsoleComponent>();
-        foreach (List<ConsoleComponent> row in componentRows)
+        List<CUIComponent> components = new List<CUIComponent>();
+        foreach (List<CUIComponent> row in componentRows)
         {
             components.AddRange(row);
         }
         
         // check if any of them are focused and focus the next one
-        RootConsoleContainer root = ConsoleUIUtils.GetRoot(this);
-        foreach (ConsoleComponent component in components)
+        CUIRootContainer cuiRoot = CUIUtils.GetRoot(this);
+        foreach (CUIComponent component in components)
         {
             component.Parent = null;
-            if (component.IsFocused() && root != null) root.FocusNext(components.ToArray());
+            if (component.IsFocused() && cuiRoot != null) cuiRoot.FocusNext(components.ToArray());
         }
         
         // clear all contents
         componentFormatting.Clear();
         componentRows.Clear();
-        componentRows.Add(new List<ConsoleComponent>());
+        componentRows.Add(new List<CUIComponent>());
         
         Rerender();
     }
@@ -126,7 +126,7 @@ public class ConsoleContainer : ConsoleComponent
     public int GetComponentCount()
     {
         int count = 0;
-        foreach (List<ConsoleComponent> row in componentRows)
+        foreach (List<CUIComponent> row in componentRows)
         {
             count += row.Count;
         }
@@ -138,10 +138,10 @@ public class ConsoleContainer : ConsoleComponent
     /// Creates a list of all components from all rows in this container, in the order they are added and rendered.
     /// </summary>
     /// <returns>the list of components</returns>
-    public List<ConsoleComponent> GetAllComponents()
+    public List<CUIComponent> GetAllComponents()
     {
-        List<ConsoleComponent> components = new List<ConsoleComponent>();
-        foreach (List<ConsoleComponent> row in componentRows)
+        List<CUIComponent> components = new List<CUIComponent>();
+        foreach (List<CUIComponent> row in componentRows)
         {
             components.AddRange(row);
         }
@@ -154,7 +154,7 @@ public class ConsoleContainer : ConsoleComponent
     /// </summary>
     /// <param name="index">the index to search</param>
     /// <returns>the component at the given index</returns>
-    public ConsoleComponent GetComponent(int index)
+    public CUIComponent GetComponent(int index)
     {
         return GetAllComponents()[index];
     }
@@ -165,7 +165,7 @@ public class ConsoleContainer : ConsoleComponent
     /// <param name="row">the row to search</param>
     /// <param name="column">the column to search</param>
     /// <returns>the component at given row and column</returns>
-    public ConsoleComponent GetComponent(int row, int column)
+    public CUIComponent GetComponent(int row, int column)
     {
         return componentRows[row][column];
     }
@@ -175,12 +175,12 @@ public class ConsoleContainer : ConsoleComponent
     /// </summary>
     /// <param name="component">the component to get the index of</param>
     /// <returns>the index or -1, if this does not contain given component</returns>
-    public int IndexOf(ConsoleComponent component)
+    public int IndexOf(CUIComponent component)
     {
         return GetAllComponents().IndexOf(component);
     }
 
-    protected override ConsoleComponent GetNext()
+    protected override CUIComponent GetNext()
     {
         if (componentRows[0].Count == 0) return base.GetNext();
         return componentRows[0][0];
@@ -189,10 +189,10 @@ public class ConsoleContainer : ConsoleComponent
     protected override int GetContentHeight() // returns the combined height of each row of components within this container
     {
         int height = 0;
-        foreach (List<ConsoleComponent> row in componentRows)
+        foreach (List<CUIComponent> row in componentRows)
         {
             int maxHeight = 0;
-            foreach (ConsoleComponent component in row)
+            foreach (CUIComponent component in row)
             {
                 int componentHeight = component.GetHeight();
                 if (componentHeight > maxHeight)
@@ -221,7 +221,7 @@ public class ConsoleContainer : ConsoleComponent
     private List<int> GetColumnWidths()
     {
         List<int> columnWidthList = new List<int>();
-        foreach (List<ConsoleComponent> row in componentRows)
+        foreach (List<CUIComponent> row in componentRows)
         {
             for (int i = 0; i < row.Count; i++)
             {
@@ -247,13 +247,13 @@ public class ConsoleContainer : ConsoleComponent
         int yOffset = 0;
         for (int rowIndex = 0; rowIndex < componentRows.Count; rowIndex++)
         {
-            List<ConsoleComponent> row = componentRows[rowIndex];
+            List<CUIComponent> row = componentRows[rowIndex];
             int rowHeight = rowHeights[rowIndex];
 
             int xOffset = 0;
             for (int columnIndex = 0; columnIndex < row.Count; columnIndex++)
             {
-                ConsoleComponent component = row[columnIndex];
+                CUIComponent component = row[columnIndex];
                 ComponentConstraints constraints = componentFormatting[component];
 
                 int cellWidth = columnWidths[columnIndex];
@@ -314,7 +314,7 @@ public class ConsoleContainer : ConsoleComponent
         for (int i = 0; i < componentRows.Count; i++)
         {
             int rowHeight = 0;
-            foreach (ConsoleComponent component in componentRows[i])
+            foreach (CUIComponent component in componentRows[i])
             {
                 rowHeight = Math.Max(rowHeight, component.GetHeight());
             }
