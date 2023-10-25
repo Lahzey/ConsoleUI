@@ -11,7 +11,7 @@ public class RowConstraints : AxisConstraints {
 	/// <param name="constraints">The constraints as string.</param>
 	/// <returns>RowConstraints, containing all the parsed information.</returns>
 	/// <exception cref="ArgumentException">If any non valid constraints are encountered.</exception>
-	public static RowConstraints parse(string constraints) {
+	public static RowConstraints Parse(string constraints) {
 		Regex regex = new Regex(@"\[([^\]]*)\]");
 		MatchCollection matches = regex.Matches(constraints);
 		bool[] growingFlags = new bool[matches.Count];

@@ -6,19 +6,16 @@ public class ContainerConstraints {
 	public readonly int AutoWrapAfter;
 
 	public ContainerConstraints(int autoWrapAfter) {
-		this.AutoWrapAfter = autoWrapAfter;
+		AutoWrapAfter = autoWrapAfter;
 	}
 
-	public static ContainerConstraints parse(string formatting) {
+	public static ContainerConstraints Parse(string formatting) {
 		string[] elements = Regex.Replace(formatting, @"\s+", "").ToLower().Split(',');
 
 		int autoWrapAfter = 0;
 		foreach (string element in elements) {
-			switch (true) {
-				case bool _ when Regex.IsMatch(element, @"^wrap\d+$", RegexOptions.IgnoreCase):
-					autoWrapAfter = int.Parse(Regex.Match(element, @"\d+").Value);
-					break;
-			}
+			if (Regex.IsMatch(element, @"^wrap\d+$", RegexOptions.IgnoreCase))
+				autoWrapAfter = int.Parse(Regex.Match(element, @"\d+").Value);
 		}
 
 		return new ContainerConstraints(autoWrapAfter);

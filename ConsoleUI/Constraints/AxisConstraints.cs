@@ -1,33 +1,33 @@
 ﻿namespace ConsoleUI.Constraints;
 
 public class AxisConstraints {
-	private readonly bool[] growingFlags;
-	private readonly int[] defaultComponentOrientation;
+	private readonly bool[] GrowingFlags;
+	private readonly int[] DefaultComponentOrientation;
 
 	protected AxisConstraints(bool[] growingFlags, int[] defaultComponentOrientation) {
-		this.growingFlags = growingFlags;
-		this.defaultComponentOrientation = defaultComponentOrientation;
+		GrowingFlags = growingFlags;
+		DefaultComponentOrientation = defaultComponentOrientation;
 	}
 
-	public bool getGrowingFlag(int column) {
-		if (growingFlags.Length == 1) {
-			return growingFlags[0];
+	public bool GetGrowingFlag(int column) {
+		if (GrowingFlags.Length == 1) {
+			return GrowingFlags[0];
 		}
-		else if (growingFlags.Length > column) {
-			return growingFlags[column];
+		else if (GrowingFlags.Length > column) {
+			return GrowingFlags[column];
 		}
 		else {
 			return false;
 		}
 	}
 
-	public int getDefaultComponentOrientation(int column) {
-		if (defaultComponentOrientation.Length == 1) {
-			return defaultComponentOrientation[0];
+	public int GetDefaultComponentOrientation(int column) {
+		if (DefaultComponentOrientation.Length == 1) {
+			return DefaultComponentOrientation[0];
 		}
 
-		if (defaultComponentOrientation.Length > column) {
-			return defaultComponentOrientation[column];
+		if (DefaultComponentOrientation.Length > column) {
+			return DefaultComponentOrientation[column];
 		}
 
 		return 0; // default for both x and y

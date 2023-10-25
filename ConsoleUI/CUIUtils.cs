@@ -8,9 +8,12 @@ public static class CUIUtils {
 	/// </summary>
 	/// <param name="component">the component to find to root of</param>
 	/// <returns>The corresponding RootConsoleContainer, or null if the component is not located within a root.</returns>
-	public static CUIRootContainer GetRoot(CUIComponent component) {
-		if (component == null || component is CUIRootContainer) return component as CUIRootContainer;
-		return GetRoot(component.Parent);
+	public static CUIRootContainer? GetRoot(CUIComponent? component) {
+		for (int i = 0; i < 9999; i++) {
+			if (component == null || component is CUIRootContainer) return component as CUIRootContainer;
+			component = component.Parent;
+		}
+		throw new InvalidOperationException("Cannot find root container, possibly caused by a loop in the CUI hierarchy.");
 	}
 
 	/// <summary>
@@ -19,7 +22,7 @@ public static class CUIUtils {
 	/// <param name="container">the container to search in</param>
 	/// <param name="component">the component to search for</param>
 	/// <returns>true if the component is somewhere within the container, false otherwise</returns>
-	public static bool Contains(CUIContainer container, CUIComponent component) {
+	public static bool Contains(CuiContainer container, CUIComponent component) {
 		foreach (CUIComponent child in AccumulateAll(container, null)) {
 			if (child == component) {
 				return true;
@@ -35,20 +38,20 @@ public static class CUIUtils {
 	/// <param name="container">the container to get components from</param>
 	/// <param name="predicate">the predicate to check each component against, or null to allow all</param>
 	/// <returns>a list of all components within the given container that pass the given predicate</returns>
-	public static List<CUIComponent> AccumulateAll(CUIContainer container, Func<CUIComponent, bool> predicate) {
+	public static List<CUIComponent> AccumulateAll(CuiContainer container, Func<CUIComponent, bool>? predicate) {
 		List<CUIComponent> result = new List<CUIComponent>();
 		AccumulateAll(result, container, predicate);
 		return result;
 	}
 
-	private static void AccumulateAll(List<CUIComponent> list, CUIContainer container, Func<CUIComponent, bool> predicate) {
+	private static void AccumulateAll(List<CUIComponent> list, CuiContainer container, Func<CUIComponent, bool>? predicate) {
 		foreach (CUIComponent child in container.GetAllComponents()) {
 			if (predicate == null || predicate(child)) {
 				list.Add(child);
 			}
 
-			if (child is CUIContainer) {
-				AccumulateAll(list, (CUIContainer)child, predicate);
+			if (child is CuiContainer) {
+				AccumulateAll(list, (CuiContainer)child, predicate);
 			}
 		}
 	}
@@ -59,7 +62,7 @@ public static class CUIUtils {
 	/// <param name="number">A number, must be between 0 and 9.</param>
 	/// <returns>the corresponding ConsoleKey</returns>
 	/// <exception cref="ArgumentException">if the number was not between 0 and 9</exception>
-	public static ConsoleKey ParseConsoleKey(int number) {
+	public static ConsoleKey ParseConsoleKey(uint number) {
 		switch (number) {
 			case 0:
 				return ConsoleKey.D0;

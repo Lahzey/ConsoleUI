@@ -11,16 +11,16 @@ public class RenderBuffer {
 	private static readonly Color DEFAULT_FOREGROUND_COLOR = Color.White;
 	private static readonly Color DEFAULT_BACKGROUND_COLOR = Color.Black;
 
-	private readonly RenderBuffer? parent; // parent buffer, null for the root buffer
-	private readonly char[][]? characters; // buffer, only not null for the root buffer
-	private readonly Color[][]? foregrounds; // foreground colors for each char in buffer, only not null for the root buffer
-	private readonly Color[][]? backgrounds; // background colors for each char in buffer, only not null for the root buffer
+	private readonly RenderBuffer? Parent; // parent buffer, null for the root buffer
+	private readonly char[][]? Characters; // buffer, only not null for the root buffer
+	private readonly Color[][]? Foregrounds; // foreground colors for each char in buffer, only not null for the root buffer
+	private readonly Color[][]? Backgrounds; // background colors for each char in buffer, only not null for the root buffer
 
-	private readonly int xOffset; // x offset to its parent
-	private readonly int yOffset; // y offset to its parent
+	private readonly int XOffset; // x offset to its parent
+	private readonly int YOffset; // y offset to its parent
 
-	private readonly int width;
-	private readonly int height;
+	private readonly int Width;
+	private readonly int Height;
 	public Color ForegroundColor { get; set; }
 	public Color BackgroundColor { get; set; }
 
@@ -43,44 +43,44 @@ public class RenderBuffer {
 	}
 
 	public RenderBuffer(RenderBuffer? parent, int xOffset, int yOffset, int width, int height) {
-		this.parent = parent;
+		Parent = parent;
 
-		this.xOffset = xOffset;
-		this.yOffset = yOffset;
-		this.width = width;
-		this.height = height;
+		XOffset = xOffset;
+		YOffset = yOffset;
+		Width = width;
+		Height = height;
 
 		ForegroundColor = parent?.ForegroundColor ?? DEFAULT_FOREGROUND_COLOR;
 		BackgroundColor = parent?.BackgroundColor ?? DEFAULT_BACKGROUND_COLOR;
 
 		if (parent != null) return;
 		
-		characters = new char[height][];
+		Characters = new char[height][];
 		for (int i = 0; i < height; i++) {
-			characters[i] = new string(' ', width).ToCharArray();
+			Characters[i] = new string(' ', width).ToCharArray();
 		}
 
-		foregrounds = new Color[height][];
+		Foregrounds = new Color[height][];
 		for (int i = 0; i < height; i++) {
-			foregrounds[i] = new Color[width];
-			for (int ii = 0; ii < width; ii++) foregrounds[i][ii] = DEFAULT_FOREGROUND_COLOR;
+			Foregrounds[i] = new Color[width];
+			for (int ii = 0; ii < width; ii++) Foregrounds[i][ii] = DEFAULT_FOREGROUND_COLOR;
 		}
 
-		backgrounds = new Color[height][];
+		Backgrounds = new Color[height][];
 		for (int i = 0; i < height; i++) {
-			backgrounds[i] = new Color[width];
-			for (int ii = 0; ii < width; ii++) backgrounds[i][ii] = DEFAULT_BACKGROUND_COLOR;
+			Backgrounds[i] = new Color[width];
+			for (int ii = 0; ii < width; ii++) Backgrounds[i][ii] = DEFAULT_BACKGROUND_COLOR;
 		}
 	}
 
 	public RenderBuffer(int width, int height) : this(null, 0, 0, width, height) {}
 
 	public int GetWidth() {
-		return width;
+		return Width;
 	}
 
 	public int GetHeight() {
-		return height;
+		return Height;
 	}
 
 	public void Set(int x, int y, char c) {
@@ -88,18 +88,19 @@ public class RenderBuffer {
 	}
 
 	public void Set(int x, int y, char c, Color foregroundColor, Color backgroundColor) {
-		if (x < 0 || x >= width || y < 0 || y >= height || c == '\r') // ignore invalid coordinates and \r (\r breaks the whole layout)
+		if (x < 0 || x >= Width || y < 0 || y >= Height || c == '\r') // ignore invalid coordinates and \r (\r breaks the whole layout)
 		{
 			return;
 		}
 
-		if (parent == null) {
-			characters[y][x] = c;
-			foregrounds[y][x] = foregroundColor;
-			if (backgroundColor.A > 0) backgrounds[y][x] = backgroundColor;
+		if (Parent == null) {
+			// arrays are never null if the parent is null
+			Characters[y][x] = c;
+			Foregrounds[y][x] = foregroundColor;
+			if (backgroundColor.A > 0) Backgrounds[y][x] = backgroundColor;
 		}
 		else {
-			parent.Set(x + xOffset, y + yOffset, c, foregroundColor, backgroundColor);
+			Parent.Set(x + XOffset, y + YOffset, c, foregroundColor, backgroundColor);
 		}
 	}
 
@@ -110,35 +111,35 @@ public class RenderBuffer {
 	}
 
 	public char GetChar(int x, int y) {
-		return parent?.GetChar(x + xOffset, y + yOffset) ?? characters[y][x];
+		return Parent?.GetChar(x + XOffset, y + YOffset) ?? Characters[y][x];
 	}
 	
 	public Color GetForegroundColor(int x, int y) {
-		return parent?.GetForegroundColor(x + xOffset, y + yOffset) ?? foregrounds[y][x];
+		return Parent?.GetForegroundColor(x + XOffset, y + YOffset) ?? Foregrounds[y][x];
 	}
 	
 	public Color GetBackgroundColor(int x, int y) {
-		return parent?.GetBackgroundColor(x + xOffset, y + yOffset) ?? backgrounds[y][x];
+		return Parent?.GetBackgroundColor(x + XOffset, y + YOffset) ?? Backgrounds[y][x];
 	}
 
 	public void Clear() {
-		if (parent != null) {
+		if (Parent != null) {
 			throw new NotImplementedException("Only the root buffer can be cleared.");
 		}
 
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				characters[y][x] = ' ';
+		for (int y = 0; y < Height; y++) {
+			for (int x = 0; x < Width; x++) {
+				Characters[y][x] = ' ';
 			}
 		}
 	}
 
 	public RenderBuffer GetRoot() {
-		return parent == null ? this : parent.GetRoot();
+		return Parent == null ? this : Parent.GetRoot();
 	}
 
 	public void RenderToConsole() {
-		if (parent != null) {
+		if (Parent != null) {
 			throw new NotImplementedException("Only the root buffer can be rendered.");
 		}
 
@@ -147,35 +148,26 @@ public class RenderBuffer {
 		Color currentForeground = Color.White;
 		Color currentBackground = Color.Black;
 		StringBuilder sb = new StringBuilder();
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				Color nextForeground = foregrounds[y][x];
-				if (nextForeground == null) nextForeground = DEFAULT_FOREGROUND_COLOR;
+		for (int y = 0; y < Height; y++) {
+			for (int x = 0; x < Width; x++) {
+				Color nextForeground = Foregrounds[y][x];
 				if (nextForeground != currentForeground) {
 					sb.Append(CUIUtils.CreateColorPrefix(nextForeground, true));
 					currentForeground = nextForeground;
 				}
 
-				Color nextBackground = backgrounds[y][x];
-				if (nextBackground == null) nextBackground = DEFAULT_BACKGROUND_COLOR;
+				Color nextBackground = Backgrounds[y][x];
 				if (nextBackground != currentBackground) {
 					sb.Append(CUIUtils.CreateColorPrefix(nextBackground, false));
 					currentBackground = nextBackground;
 				}
 
-				sb.Append(characters[y][x]);
+				sb.Append(Characters[y][x]);
 			}
 
 			sb.Append('\n');
 		}
 
 		Console.Write(sb.ToString());
-	}
-
-	private static void Flush(StringBuilder sb) {
-		if (sb.Length > 0) {
-			Console.Write(sb.ToString());
-			sb.Clear();
-		}
 	}
 }

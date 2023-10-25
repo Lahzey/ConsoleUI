@@ -3,26 +3,26 @@
 namespace ConsoleUI;
 
 public class CUIButton : CUILabel, IActivateable {
-	private bool disabled = false;
-
+	
+	private bool _disabled = false;
 	/// <summary>
 	/// If disabled, the button will no longer be focusable and cannot be activated by any means.
 	/// </summary>
 	public bool Disabled {
-		get => disabled;
+		get => _disabled;
 		set {
-			disabled = value;
-			Focusable = !disabled;
+			_disabled = value;
+			Focusable = !_disabled;
 			Rerender();
 		}
 	}
 
 	public ConsoleKey Hotkey { get; set; }
 
-	public Action Action { get; set; }
+	public Action? Action { get; set; }
 
-	public CUIButton(string content, Action action = null) : base(content) {
-		this.Action = action;
+	public CUIButton(string content, Action? action = null) : base(content) {
+		Action = action;
 		TextOrientation = CENTER;
 		SetBorder(1, 1, 1, 1);
 		SetPadding(0, 0, 1, 1);
@@ -31,7 +31,7 @@ public class CUIButton : CUILabel, IActivateable {
 	}
 
 	public override bool HandleInput(ConsoleKeyInfo keyInfo) {
-		if (!disabled && keyInfo.Key == ConsoleKey.Enter) {
+		if (!_disabled && keyInfo.Key == ConsoleKey.Enter) {
 			if (Action != null) Activate();
 			return true;
 		}
@@ -42,7 +42,7 @@ public class CUIButton : CUILabel, IActivateable {
 	public void Activate() {
 		if (!Disabled) {
 			if (Focusable) Focus();
-			Action();
+			Action?.Invoke();
 		}
 	}
 

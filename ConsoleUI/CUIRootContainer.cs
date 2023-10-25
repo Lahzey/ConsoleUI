@@ -1,12 +1,12 @@
 ﻿namespace ConsoleUI;
 
-public class CUIRootContainer : CUIContainer {
-	private CUIComponent currentlyFocused = null;
+public class CUIRootContainer : CuiContainer {
+	private CUIComponent? CurrentlyFocused = null;
 
 	public readonly Dictionary<char, Action> Hotkeys = new Dictionary<char, Action>();
 
 	public CUIRootContainer(CUIComponent content) : base("", "[grow, fill]", "[grow, fill]") {
-		base.Add(content);
+		Add(content);
 	}
 
 	private void Render() {
@@ -17,23 +17,23 @@ public class CUIRootContainer : CUIContainer {
 		Console.Write(renderBuffer);
 	}
 
-	public void Focus(CUIComponent component) {
-		if (currentlyFocused != null && currentlyFocused.OnFocusLost != null) currentlyFocused.OnFocusLost();
-		currentlyFocused = component;
-		if (currentlyFocused != null && currentlyFocused.OnFocusGained != null) currentlyFocused.OnFocusGained();
+	public void Focus(CUIComponent? component) {
+		CurrentlyFocused?.OnFocusLost?.Invoke();
+		CurrentlyFocused = component;
+		CurrentlyFocused?.OnFocusGained?.Invoke();
 		CUIRenderManager.Instance.Rerender();
 	}
 
 	public void FocusNext(params CUIComponent[] blockedFromFocus) {
 		List<CUIComponent> focusableComponents = CUIUtils.AccumulateAll(this, comp => comp.Focusable);
-		int currentFocusIndex = currentlyFocused == null ? -1 : focusableComponents.IndexOf(currentlyFocused);
+		int currentFocusIndex = CurrentlyFocused == null ? -1 : focusableComponents.IndexOf(CurrentlyFocused);
 		int startIndex = focusableComponents.Count > currentFocusIndex + 1 ? currentFocusIndex + 1 : 0;
 
 		for (int i = startIndex; i != currentFocusIndex; i = i + 1 < focusableComponents.Count ? i + 1 : 0) {
 			CUIComponent component = focusableComponents[i];
 			bool isBlocked = false;
 			foreach (CUIComponent blocked in blockedFromFocus) {
-				if (component == blocked || (blocked is CUIContainer && CUIUtils.Contains((CUIContainer)blocked, component))) {
+				if (component == blocked || (blocked is CuiContainer && CUIUtils.Contains((CuiContainer)blocked, component))) {
 					isBlocked = true;
 					continue;
 				}
@@ -48,8 +48,8 @@ public class CUIRootContainer : CUIContainer {
 		Focus(null); // if no other component can be focused, focus nothing
 	}
 
-	public CUIComponent getFocused() {
-		return currentlyFocused;
+	public CUIComponent? GetFocused() {
+		return CurrentlyFocused;
 	}
 
 	protected virtual void Exit() {
@@ -71,8 +71,8 @@ public class CUIRootContainer : CUIContainer {
 		}
 
 		bool triggerHotkeys = true;
-		if (currentlyFocused != null) {
-			triggerHotkeys = !currentlyFocused.HandleInput(key);
+		if (CurrentlyFocused != null) {
+			triggerHotkeys = !CurrentlyFocused.HandleInput(key);
 		}
 
 		if (triggerHotkeys) {

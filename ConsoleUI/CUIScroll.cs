@@ -2,10 +2,10 @@
 
 namespace ConsoleUI; 
 
-public class CUIScroll : CUIContainer {
+public class CUIScroll : CuiContainer {
 	
-	private static readonly ScrollBarChars HorizontalBarChars = new ScrollBarChars('▐', '▌', '║', '█');
-	private static readonly ScrollBarChars VerticalBarChars = new ScrollBarChars('_', '‾', '=', '█');
+	private static readonly ScrollBarChars HORIZONTAL_BAR_CHARS = new ScrollBarChars('▐', '▌', '║', '█');
+	private static readonly ScrollBarChars VERTICAL_BAR_CHARS = new ScrollBarChars('_', '‾', '=', '█');
 
 	public int Width { get; set; } = 1;
 	public int Height { get; set; } = 1;
@@ -69,7 +69,7 @@ public class CUIScroll : CUIContainer {
 		
 		int maxX = buffer.GetWidth() - (ShowVerticalScrollbar ? 1 : 0);
 		if (ShowHorizontalScrollbar) {
-			char[] horizontalScrollBar = CreateScrollBar(contentWidth, HorizontalScrollPosition, viewportWidth, HorizontalBarChars);
+			char[] horizontalScrollBar = CreateScrollBar(contentWidth, HorizontalScrollPosition, viewportWidth, HORIZONTAL_BAR_CHARS);
 			int y = buffer.GetHeight() - 1;
 			for (int x = 0; x < maxX; x++) {
 				buffer.Set(x, y, horizontalScrollBar[x]);
@@ -78,7 +78,7 @@ public class CUIScroll : CUIContainer {
 		
 		int maxY = buffer.GetHeight() - (ShowHorizontalScrollbar ? 1 : 0);
 		if (ShowVerticalScrollbar) {
-			char[] verticalScrollBar = CreateScrollBar(contentHeight, VerticalScrollPosition, viewportHeight, VerticalBarChars);
+			char[] verticalScrollBar = CreateScrollBar(contentHeight, VerticalScrollPosition, viewportHeight, VERTICAL_BAR_CHARS);
 			int x = buffer.GetWidth() - 1;
 			for (int y = 0; y < maxY; y++) {
 				buffer.Set(x, y, verticalScrollBar[y]);

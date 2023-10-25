@@ -13,12 +13,12 @@ public class ComponentConstraints {
 	public static readonly int DEFAULT_X = LEFT;
 	public static readonly int DEFAULT_Y = TOP;
 
-	public readonly int orientationX;
-	public readonly int orientationY;
+	public readonly int OrientationX;
+	public readonly int OrientationY;
 
 	public ComponentConstraints(int orientationX, int orientationY) {
-		this.orientationX = orientationX;
-		this.orientationY = orientationY;
+		OrientationX = orientationX;
+		OrientationY = orientationY;
 	}
 
 	/// <summary>
@@ -29,7 +29,7 @@ public class ComponentConstraints {
 	/// <param name="defaultYOrientation">The default y-orientation to be used if not overwritten by the constraints.</param>
 	/// <returns>ComponentConstraints containing all the parsed information.</returns>
 	/// <exception cref="ArgumentException">If any non valid constraints are encountered.</exception>
-	public static ComponentConstraints parse(string constraints, int defaultXOrientation, int defaultYOrientation) {
+	public static ComponentConstraints Parse(string constraints, int defaultXOrientation, int defaultYOrientation) {
 		string[] elements = Regex.Replace(constraints, @"\s+", "").ToLower().Split(',');
 
 		int orientationX = defaultXOrientation;

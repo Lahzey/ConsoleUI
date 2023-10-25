@@ -1,64 +1,60 @@
 ﻿namespace ConsoleUI;
 
 public class CUILabel : CUIComponent {
-	public static readonly int LEFT = 0;
-	public static readonly int CENTER = 1;
-	public static readonly int RIGHT = 2;
+	public const int LEFT = 0;
+	public const int CENTER = 1;
+	public const int RIGHT = 2;
 
+	#region properties
+	protected string _content = "";
+	/// <summary>
+	/// The text that is displayed by this component.
+	/// </summary>
 	public string Content {
-		get => content;
+		get => _content;
 		set {
-			content = value;
+			_content = value;
 			Rerender();
 		}
 	}
-
-	/// <summary>
-	///  Only use this access if you want to prevent a rerender.
-	/// </summary>
-	protected string content;
-
+	private int _textOrientation = LEFT;
 	/// <summary>
 	/// Can be ConsoleLabel.LEFT, ConsoleLabel.CENTER or ConsoleLabel.RIGHT and controls how to align the text.
 	/// </summary>
 	public int TextOrientation {
-		get => textOrientation;
+		get => _textOrientation;
 		set {
-			textOrientation = value;
+			_textOrientation = value;
 			Rerender();
 		}
 	}
-
-	private int textOrientation = LEFT;
-
+	private bool _wrapText = false;
 	/// <summary>
 	/// If true the text will be wrapped to new lines if no more space is available.
 	/// </summary>
 	public bool WrapText {
-		get => wrapText;
+		get => _wrapText;
 		set {
-			wrapText = value;
+			_wrapText = value;
 			Rerender();
 		}
 	}
-
-	private bool wrapText = false;
-
+	private int _preferredWidth = 0;
 	/// <summary>
 	/// Gives the parent a width preference, useful when WrapText is true.
 	/// </summary>
 	public int PreferredWidth {
-		get => preferredWidth;
+		get => _preferredWidth;
 		set {
-			preferredWidth = value;
+			_preferredWidth = value;
 			Rerender();
 		}
 	}
+	#endregion
 
-	private int preferredWidth = 0;
 
 	// for wrapping text, so the needed height can be calculated in GetHeight()
-	private int lastWidth = int.MaxValue;
+	private int LastWidth = int.MaxValue;
 
 	public CUILabel(string content) {
 		Content = content;
@@ -71,7 +67,7 @@ public class CUILabel : CUIComponent {
 	protected override int GetContentWidth() {
 		if (PreferredWidth > 0) return PreferredWidth;
 
-		if (wrapText) return 0; // lets other components decide how wide this is
+		if (_wrapText) return 0; // lets other components decide how wide this is
 
 		int maxWidth = 0;
 		// TODO: can be done more efficiently by iterating over string chars manually
@@ -83,8 +79,8 @@ public class CUILabel : CUIComponent {
 	}
 
 	protected override void RenderContent(RenderBuffer buffer) {
-		if (WrapText && lastWidth != buffer.GetWidth()) Rerender(); // only requests a rerender, so the lastWidth will be changed by the time the rerender happens
-		lastWidth = buffer.GetWidth();
+		if (WrapText && LastWidth != buffer.GetWidth()) Rerender(); // only requests a rerender, so the lastWidth will be changed by the time the rerender happens
+		LastWidth = buffer.GetWidth();
 
 		string[] lines = GetLines();
 		for (int i = 0; i < lines.Length; i++) {
@@ -112,7 +108,7 @@ public class CUILabel : CUIComponent {
 				foreach (string word in contentLine.Split(' ')) {
 					if (currentLine.Length == 0) currentLine += word;
 					else {
-						if (currentLine.Length + 1 + word.Length > lastWidth) {
+						if (currentLine.Length + 1 + word.Length > LastWidth) {
 							lines.Add(currentLine);
 							currentLine = "";
 						}

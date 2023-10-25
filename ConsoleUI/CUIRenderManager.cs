@@ -10,21 +10,21 @@ public class CUIRenderManager {
 
 	public static readonly CUIRenderManager Instance = new CUIRenderManager();
 
-	private Thread refresher;
-	private Thread inputPoller;
+	private readonly Thread Refresher;
+	private readonly Thread InputPoller;
 
-	private bool renderRequested = false;
-	private int lastWidth = 0;
-	private int lastHeight = 0;
+	private bool RenderRequested = false;
+	private int LastWidth = 0;
+	private int LastHeight = 0;
 
-	private readonly List<CUIRootContainer> containers = new List<CUIRootContainer>();
+	private readonly List<CUIRootContainer> Containers = new List<CUIRootContainer>();
 
 	private CUIRenderManager() {
-		refresher = new Thread(new ThreadStart(Refresh));
-		refresher.Start();
+		Refresher = new Thread(Refresh);
+		Refresher.Start();
 
-		inputPoller = new Thread(new ThreadStart(PollInput));
-		inputPoller.Start();
+		InputPoller = new Thread(PollInput);
+		InputPoller.Start();
 	}
 
 	/// <summary>
@@ -35,14 +35,14 @@ public class CUIRenderManager {
 	/// <param name="container"></param>
 	public void AddContainer(CUIRootContainer container) {
 		lock (RENDER_LOCK) {
-			containers.Add(container);
+			Containers.Add(container);
 			Rerender();
 		}
 	}
 
 	public void RemoveContainer(CUIRootContainer container) {
 		lock (RENDER_LOCK) {
-			containers.Remove(container);
+			Containers.Remove(container);
 			Rerender();
 		}
 	}
@@ -52,7 +52,7 @@ public class CUIRenderManager {
 	/// The rerender happens asynchronously and not instantly.
 	/// </summary>
 	public void Rerender() {
-		renderRequested = true;
+		RenderRequested = true;
 	}
 
 	private void Render() {
@@ -61,7 +61,7 @@ public class CUIRenderManager {
 			RenderBuffer renderBuffer = new RenderBuffer(Console.WindowWidth - 1, Console.WindowHeight - 1);
 
 			// rendering each container in on top of each other, allowing for popups and other overlays
-			foreach (CUIRootContainer container in containers) {
+			foreach (CUIRootContainer container in Containers) {
 				container.Render(renderBuffer);
 			}
 
@@ -71,8 +71,8 @@ public class CUIRenderManager {
 
 	private void HandleInput(ConsoleKeyInfo key) {
 		lock (RENDER_LOCK) {
-			if (containers.Count > 0) {
-				containers[^1].HandleInput(key);
+			if (Containers.Count > 0) {
+				Containers[^1].HandleInput(key);
 			}
 		}
 	}
@@ -87,10 +87,10 @@ public class CUIRenderManager {
 	private void Refresh() {
 		while (true) {
 			Thread.Sleep(FRAME_DELAY);
-			if (renderRequested || lastWidth != Console.WindowWidth || lastHeight != Console.WindowHeight) {
-				renderRequested = false;
-				lastWidth = Console.WindowWidth;
-				lastHeight = Console.WindowHeight;
+			if (RenderRequested || LastWidth != Console.WindowWidth || LastHeight != Console.WindowHeight) {
+				RenderRequested = false;
+				LastWidth = Console.WindowWidth;
+				LastHeight = Console.WindowHeight;
 				Render();
 			}
 		}
