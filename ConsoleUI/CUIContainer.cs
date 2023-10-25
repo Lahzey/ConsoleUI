@@ -354,4 +354,13 @@ public class CUIContainer : CUIComponent
             toDistribute--;
         }
     }
+
+    public bool FocusHierarchy() {
+        if (Focusable) {
+            Focus();
+            return true;
+        }
+
+        return false;
+    }
 }

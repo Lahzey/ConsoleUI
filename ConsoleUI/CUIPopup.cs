@@ -52,12 +52,12 @@ public class CUIPopup : CUIRootContainer {
 		return result;
 	}
 
-	public static string? ShowInput(string label) {
+	public static string? ShowInput(string label, string defaultValue = "") {
 		CUIContainer container = new CUIContainer("", "[grow, fill]", "[][grow, fill]");
 		container.SetBorder(1, 1, 1, 1);
 		container.SetPadding(0, 0, 1, 1);
 		container.Add(new CUILabel(label));
-		CUIInputField inputField = new CUIInputField();
+		CUIInputField inputField = new CUIInputField(defaultValue);
 		container.Add(inputField);
 		if (Show(container)) {
 			return inputField.Content;
