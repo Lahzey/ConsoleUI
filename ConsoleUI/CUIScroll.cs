@@ -4,20 +4,16 @@ namespace ConsoleUI;
 
 public class CUIScroll : CuiContainer {
 	
-	private static readonly ScrollBarChars HORIZONTAL_BAR_CHARS = new ScrollBarChars('▐', '▌', '║', '█');
-	private static readonly ScrollBarChars VERTICAL_BAR_CHARS = new ScrollBarChars('_', '‾', '=', '█');
+	private static readonly ScrollBarChars DEFAULT_HORIZONTAL_BAR_CHARS = new ScrollBarChars('▐', '▌', '║', '█');
+	private static readonly ScrollBarChars DEFAULT_VERTICAL_BAR_CHARS = new ScrollBarChars('_', '‾', '=', '█');
 
 	public int Width { get; set; } = 1;
 	public int Height { get; set; } = 1;
 	
-	public int HorizontalScrollSpeed { get; set; } = 1;
-	public int VerticalScrollSpeed { get; set; } = 1;
-	
-	public bool ShowHorizontalScrollbar { get; set; } = true;
-	public bool ShowVerticalScrollbar { get; set; } = true;
-	
-	public int HorizontalScrollPosition { get; set; } = 0;
-	public int VerticalScrollPosition { get; set; } = 0;
+	private ScrollBar _horizontalScrollBar = new ScrollBar(DEFAULT_HORIZONTAL_BAR_CHARS);
+	public ScrollBar HorizontalScrollBar { get => _horizontalScrollBar; set { _horizontalScrollBar = value; Rerender(); } }
+	private ScrollBar _verticalScrollBar = new ScrollBar(DEFAULT_VERTICAL_BAR_CHARS);
+	public ScrollBar VerticalScrollBar { get => _verticalScrollBar; set { _verticalScrollBar = value; Rerender(); } }
 	
 	public CUIScroll() : this("", "", "") {}
 
@@ -38,18 +34,40 @@ public class CUIScroll : CuiContainer {
 	}
 
 	protected override void RenderContent(RenderBuffer buffer) {
-		// create a new root buffer to temporarily render the content to
-		int viewportWidth = buffer.GetWidth() - (ShowVerticalScrollbar ? 1 : 0);
-		int viewportHeight = buffer.GetHeight() - (ShowHorizontalScrollbar ? 1 : 0);
-		int contentWidth = Math.Max(base.GetContentWidth(), viewportWidth);
-		int contentHeight = Math.Max(base.GetContentHeight(), viewportHeight);
+		#region Size calculation and creation of viewport buffer
+		int contentWidth = base.GetContentWidth();
+		int viewportWidth = buffer.GetWidth();
+		int contentHeight = base.GetContentHeight();
+		int viewportHeight = buffer.GetHeight();
+		
+		bool showHorizontalScrollbar = HorizontalScrollBar.Show(viewportWidth, contentWidth);
+		if (showHorizontalScrollbar) viewportHeight--;
+		
+		bool showVerticalScrollbar = VerticalScrollBar.Show(viewportHeight, contentHeight);
+		if (showVerticalScrollbar) {
+			viewportWidth--;
+			showHorizontalScrollbar = HorizontalScrollBar.Show(viewportWidth, contentWidth); // needs to be recalculated because the available space was reduced
+		}
+		
+		if (contentWidth < viewportWidth) contentWidth = viewportWidth;
+		if (contentHeight < viewportHeight) contentHeight = viewportHeight;
+		
 		RenderBuffer viewportBuffer = new RenderBuffer(contentWidth, contentHeight);
 		viewportBuffer.ForegroundColor = buffer.ForegroundColor;
 		viewportBuffer.BackgroundColor = buffer.BackgroundColor;
+		#endregion
 		
-		// check max scroll position based on viewport and buffer size
-		HorizontalScrollPosition = Math.Min(HorizontalScrollPosition, contentWidth - viewportWidth);
-		VerticalScrollPosition = Math.Min(VerticalScrollPosition, contentHeight - viewportHeight);
+		#region Clamp scroll positions and check fo scroll to bottom flags
+		int maxScrollX = contentWidth - viewportWidth;
+		int scrollX = _horizontalScrollBar.ScrollToBottom ? maxScrollX : _horizontalScrollBar.Position;
+		if (scrollX > maxScrollX && _horizontalScrollBar.AutoScrollToBottom) _horizontalScrollBar.ScrollToBottom = true;
+		_horizontalScrollBar.Position = Math.Clamp(scrollX, 0, maxScrollX);
+		
+		int maxScrollY = contentHeight - viewportHeight;
+		int scrollY = _verticalScrollBar.ScrollToBottom ? maxScrollY : _verticalScrollBar.Position;
+		if (scrollY > maxScrollY && _verticalScrollBar.AutoScrollToBottom) _verticalScrollBar.ScrollToBottom = true;
+		_verticalScrollBar.Position = Math.Clamp(scrollY, 0, maxScrollY);
+		#endregion
 		
 		// TODO: this currently renders all children, even if they are completely out of view. This could be improved.
 		base.RenderContent(viewportBuffer);
@@ -57,8 +75,8 @@ public class CUIScroll : CuiContainer {
 		// render the created buffer to the actual buffer with the scroll position as offset
 		for (int x = 0; x < buffer.GetWidth(); x++) {
 			for (int y = 0; y < buffer.GetHeight(); y++) {
-				int offsetX = x + HorizontalScrollPosition;
-				int offsetY = y + VerticalScrollPosition;
+				int offsetX = x + _horizontalScrollBar.Position;
+				int offsetY = y + _verticalScrollBar.Position;
 				if (offsetX >= contentWidth || offsetY >= contentHeight) continue; // we could break if x is higher (but not y), but this is more readable
 				buffer.Set(x, y, viewportBuffer.GetChar(offsetX, offsetY), viewportBuffer.GetForegroundColor(offsetX, offsetY), viewportBuffer.GetBackgroundColor(offsetX, offsetY));
 			}
@@ -67,18 +85,18 @@ public class CUIScroll : CuiContainer {
 		Color foreground = buffer.ForegroundColor;
 		Color background = LerpColor(buffer.BackgroundColor, foreground, 0.2f);
 		
-		int maxX = buffer.GetWidth() - (ShowVerticalScrollbar ? 1 : 0);
-		if (ShowHorizontalScrollbar) {
-			char[] horizontalScrollBar = CreateScrollBar(contentWidth, HorizontalScrollPosition, viewportWidth, HORIZONTAL_BAR_CHARS);
+		int maxX = buffer.GetWidth() - (showVerticalScrollbar ? 1 : 0);
+		if (showHorizontalScrollbar) {
+			char[] horizontalScrollBar = CreateScrollBar(contentWidth, _horizontalScrollBar.Position, viewportWidth, DEFAULT_HORIZONTAL_BAR_CHARS);
 			int y = buffer.GetHeight() - 1;
 			for (int x = 0; x < maxX; x++) {
 				buffer.Set(x, y, horizontalScrollBar[x]);
 			}
 		}
 		
-		int maxY = buffer.GetHeight() - (ShowHorizontalScrollbar ? 1 : 0);
-		if (ShowVerticalScrollbar) {
-			char[] verticalScrollBar = CreateScrollBar(contentHeight, VerticalScrollPosition, viewportHeight, VERTICAL_BAR_CHARS);
+		int maxY = buffer.GetHeight() - (showHorizontalScrollbar ? 1 : 0);
+		if (showVerticalScrollbar) {
+			char[] verticalScrollBar = CreateScrollBar(contentHeight, _verticalScrollBar.Position, viewportHeight, DEFAULT_VERTICAL_BAR_CHARS);
 			int x = buffer.GetWidth() - 1;
 			for (int y = 0; y < maxY; y++) {
 				buffer.Set(x, y, verticalScrollBar[y]);
@@ -88,21 +106,21 @@ public class CUIScroll : CuiContainer {
 
 	public override bool HandleInput(ConsoleKeyInfo keyInfo) {
 		if (keyInfo.Key == ConsoleKey.DownArrow) {
-			VerticalScrollPosition += VerticalScrollSpeed;
+			_verticalScrollBar.Position += _verticalScrollBar.Speed;
 			Rerender();
 			return true;
 		} else if (keyInfo.Key == ConsoleKey.UpArrow) {
-			VerticalScrollPosition -= VerticalScrollSpeed;
-			if (VerticalScrollPosition < 0) VerticalScrollPosition = 0;
+			_verticalScrollBar.Position -= _verticalScrollBar.Speed;
+			_verticalScrollBar.ScrollToBottom = false;
 			Rerender();
 			return true;
 		} else if (keyInfo.Key == ConsoleKey.RightArrow) {
-			HorizontalScrollPosition += HorizontalScrollSpeed;
+			_horizontalScrollBar.Position += _horizontalScrollBar.Speed;
 			Rerender();
 			return true;
 		} else if (keyInfo.Key == ConsoleKey.LeftArrow) {
-			HorizontalScrollPosition -= HorizontalScrollSpeed;
-			if (HorizontalScrollPosition < 0) HorizontalScrollPosition = 0;
+			_horizontalScrollBar.Position -= _horizontalScrollBar.Speed;
+			_horizontalScrollBar.ScrollToBottom = false;
 			Rerender();
 			return true;
 		}
@@ -145,7 +163,46 @@ public class CUIScroll : CuiContainer {
 		return result;
 	}
 
-	private class ScrollBarChars {
+	public struct ScrollBar {
+		/// <summary>
+		/// The character set used to render the scrollbar.
+		/// </summary>
+		public ScrollBarChars Chars;
+		/// <summary>
+		/// Defines if and when the scrollbar is shown.
+		/// </summary>
+		public ShowMode ShowMode = ShowMode.WhenNeeded;
+		/// <summary>
+		/// The amount of characters the view is offset by in the axis of this scrollbar.
+		/// </summary>
+		public int Position = 0;
+		/// <summary>
+		/// The speed of scrolling in characters per key press.
+		/// </summary>
+		public int Speed = 1;
+		/// <summary>
+		/// If true, the scrollbar will always be scrolled to the very bottom.
+		/// </summary>
+		public bool ScrollToBottom = false;
+		/// <summary>
+		/// Turns on ScrollToBottom when the content is scrolled past the bottom.
+		/// </summary>
+		public bool AutoScrollToBottom = true;
+
+		public ScrollBar(ScrollBarChars chars) {
+			Chars = chars;
+		}
+		
+		public bool Show(int availableSpace, int neededSpace) => ShowMode == ShowMode.Always || ShowMode == ShowMode.WhenNeeded && neededSpace > availableSpace;
+	}
+	
+	public enum ShowMode {
+		Always,
+		WhenNeeded,
+		Never
+	}
+
+	public class ScrollBarChars { // can be a class instead of struct because it is immutable (saves memory)
 		public readonly char StartEdgeChar;
 		public readonly char EndEdgeChar;
 		public readonly char CenterLineChar;
